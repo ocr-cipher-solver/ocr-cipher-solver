@@ -10,10 +10,17 @@ python3 -m build
 python3 -m pip install -e .
 ```
 
+## Development Instructions
+Install pre-commit to ensure code quality.
+```
+pre-commit install
+```
+
+This will run checks on your code every time you commit.
+
 ## Test Instructions
 You can run the test suite with the following command:
 
 ```
 tox
 ```
-
