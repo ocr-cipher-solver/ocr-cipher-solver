@@ -1,6 +1,6 @@
 import abc
 
-from ocr_cipher_solver.types import PositionalCharacterSet
+from ocr_cipher_solver.data_formats import PositionalCharacterSet
 
 
 class Encipherer(abc.ABC):

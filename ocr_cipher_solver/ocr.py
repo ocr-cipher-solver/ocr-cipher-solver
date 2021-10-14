@@ -1,7 +1,7 @@
 """Defines the OCR class, which transforms an image of text to characters and bounding boxes."""
 from PIL import Image
 
-from .types import PositionalCharacterSet
+from .data_formats import PositionalCharacterSet
 
 
 class OCR:

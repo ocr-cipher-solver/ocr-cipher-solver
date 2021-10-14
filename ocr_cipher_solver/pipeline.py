@@ -8,7 +8,7 @@ from .ocr import OCR
 from .outputs import PipelineOutput
 from .reconstructor import ReconstructedImage
 from .reconstructor import Reconstructor
-from ocr_cipher_solver.types import PositionalCharacterSet
+from ocr_cipher_solver.data_formats import PositionalCharacterSet
 
 
 class ImagePipeline:
