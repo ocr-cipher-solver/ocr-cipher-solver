@@ -7,7 +7,10 @@ Character = str
 Position = Tuple[int, int]
 
 
-PositionalCharacter = Tuple[Character, Position]
+BoundingBox = Tuple[Position, Position, Position, Position]
+
+
+PositionalCharacter = Tuple[Character, BoundingBox]
 
 
 PositionalCharacterSet = List[PositionalCharacter]
