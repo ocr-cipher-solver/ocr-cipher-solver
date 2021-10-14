@@ -4,12 +4,11 @@ from typing import Tuple
 from PIL import Image
 
 from .ciphers import Encipherer
-from .ciphers import EnciphererResult
 from .ocr import OCR
-from .ocr import OCRResult
 from .outputs import PipelineOutput
+from .reconstructor import ReconstructedImage
 from .reconstructor import Reconstructor
-from .reconstructor import ReconstructorResult
+from ocr_cipher_solver.types import PositionalCharacterSet
 
 
 class ImagePipeline:
@@ -41,23 +40,27 @@ class ImagePipeline:
         self._reconstructor = reconstructor
         self._outputs = outputs
 
-    def run_pipeline(self, img: Image.Image):
+    def run_pipeline(self, input_image: Image.Image):
         """Runs pipeline, feeding results forward through stages.
 
         Parameters
         ----------
-        img : Image.Image
-            img to run pipeline with
+        input_image : Image.Image
+            image to run pipeline with
         """
         # run ocr
-        ocr_result: OCRResult = self._ocr.run(img)
+        positional_char_set: PositionalCharacterSet = self._ocr.run(input_image)
 
         # run encipherer
-        encipherer_result: EnciphererResult = self._encipherer.run(ocr_result)
+        enciphered_positional_char_set: PositionalCharacterSet = self._encipherer.run(
+            positional_char_set,
+        )
 
         # run reconstructor
-        reconstructor_result: ReconstructorResult = self._reconstructor.run(encipherer_result, img)
+        reconstructed_image: ReconstructedImage = self._reconstructor.run(
+            enciphered_positional_char_set, input_image,
+        )
 
         # run output heads
         for output in self._outputs:
-            output.run(reconstructor_result)
+            output.run(reconstructed_image)
