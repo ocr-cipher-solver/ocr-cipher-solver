@@ -5,7 +5,6 @@ from typing import List
 
 from .bounding_box import BoundingBox
 from .character import Character
-from .position import Position
 
 
 @dataclasses.dataclass
@@ -21,26 +20,32 @@ class PositionalCharacter:
             )
 
     @classmethod
-    def from_easy_ocr_char(
-        cls, ocr_char: tuple[list[list[int]], str, float],
+    def from_tesseract_char(
+        cls, char: Character, left: int, bottom: int, right: int, top: int,
     ) -> PositionalCharacter:
-        """Creates positional character from easy OCR character.
+        """Creates positional character from tesseract character.
 
         Parameters
         ----------
-        char : Tuple[List[List[int]], str, float]
-            tuple of bounding box, character, and confidence
+        char : Character
+            tesseract detected character
+        left : int
+            distance from left of bounding box to left edge of image
+        bottom : int
+            distance from bottom of bounding box to bottom edge of image
+        right : int
+            distance from right of bounding box to right edge of image
+        top : int
+            distance from top of bounding box to top edge of image
 
         Returns
         -------
         PositionalCharacter
-            positional character constructed form easy ocr character
+            positional character constructed from tesseract character
         """
-        # unpack easy ocr char
-        bounding_box, char, _ = ocr_char
         return cls(
             character=char,
-            bounding_box=BoundingBox(*tuple(Position(*corner) for corner in bounding_box)),
+            bounding_box=BoundingBox.from_lbrt(left, bottom, right, top),
         )
 
 

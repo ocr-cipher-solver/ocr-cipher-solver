@@ -5,6 +5,9 @@ Implements an OCR cipher solver using optical character recognition and image au
 You can install the `ocr-cipher-solver` package as follows:
 
 ```
+sudo apt install tesseract-ocr
+sudo apt install libtesseract-dev
+
 python3 -m pip install --upgrade build
 python3 -m build
 python3 -m pip install -e .
