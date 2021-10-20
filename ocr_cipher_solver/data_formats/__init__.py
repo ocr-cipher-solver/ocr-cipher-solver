@@ -1,1 +1,2 @@
+from .positional_character import PositionalCharacter
 from .positional_character import PositionalCharacterSet
