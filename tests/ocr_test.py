@@ -1,14 +1,13 @@
+from typing import List
+
 from PIL import Image
 from PIL import ImageDraw
 
 from ocr_cipher_solver.ocr import OCR
 
 
-def test_ocr_with_covid_image():
-    """Tests OCR package with covid example image."""
-    # load image from file
-    img = Image.open('./examples/covid.png')
-
+def run_ocr_with_img(img: Image.Image):
+    """Tests OCR package provided example image."""
     # init OCR
     ocr = OCR()
 
@@ -30,3 +29,10 @@ def test_ocr_with_covid_image():
 
     # print character set
     print([char.character for char in charset])
+
+
+def test_ocr_with_example_images(example_images: List[Image.Image]):
+    """Tests OCR with example images."""
+    for example_image in example_images:
+        run_ocr_with_img(example_image)
+        input()
