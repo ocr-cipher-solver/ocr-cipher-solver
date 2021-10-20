@@ -35,4 +35,4 @@ def test_ocr_with_example_images(example_images: List[Image.Image]):
     """Tests OCR with example images."""
     for example_image in example_images:
         run_ocr_with_img(example_image)
-        input()
+        input('Press any key to go to the next image test... ')
