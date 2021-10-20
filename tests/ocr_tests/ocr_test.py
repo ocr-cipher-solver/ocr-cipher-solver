@@ -6,6 +6,9 @@ from PIL import ImageDraw
 from ocr_cipher_solver.ocr import OCR
 
 
+MAX_CHARS = 255
+
+
 def run_ocr_with_img(img: Image.Image):
     """Tests OCR package provided example image."""
     # init OCR
@@ -28,7 +31,7 @@ def run_ocr_with_img(img: Image.Image):
     img.show()
 
     # print character set
-    print([char.character for char in charset])
+    print([char for char in charset][:MAX_CHARS])
 
 
 def test_ocr_with_example_images(example_images: List[Image.Image]):
@@ -36,3 +39,4 @@ def test_ocr_with_example_images(example_images: List[Image.Image]):
     for example_image in example_images:
         run_ocr_with_img(example_image)
         input('Press any key to go to the next image test... ')
+        print('\n\n')

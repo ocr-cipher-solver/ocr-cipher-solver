@@ -31,3 +31,13 @@ class BoundingBox:
             bounding box constructed from lbrt values
         """
         return cls(left, top, right - left, top - bottom)
+
+    def to_ltrb(self) -> tuple[int, int, int, int]:
+        """Converts bounding box into tuple of left, top, right, and bottom values.
+
+        Returns
+        -------
+        Tuple[int, int, int, int]
+            left, top, right, and bottom values of bounding box
+        """
+        return self.left, self.top, self.left + self.width, self.top - self.height
