@@ -27,3 +27,6 @@ def test_ocr_with_covid_image():
 
     # display image
     img.show()
+
+    # print character set
+    print([char.character for char in charset])
