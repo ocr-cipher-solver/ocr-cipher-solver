@@ -1,11 +1,11 @@
 from typing import Tuple
 
 import pytest
-from conftest import expected_colors
-from conftest import test_bounding_boxes
-from conftest import test_img_paths
 from PIL import Image
 
+from .conftest import expected_colors
+from .conftest import test_bounding_boxes
+from .conftest import test_img_paths
 from ocr_cipher_solver.data_formats import BoundingBox
 from ocr_cipher_solver.data_formats import RGBA
 from ocr_cipher_solver.utils import get_fg_bg_colors_from_img_section
