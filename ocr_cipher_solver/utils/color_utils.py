@@ -5,6 +5,9 @@ from typing import List
 from typing import Tuple
 
 from PIL import Image
+from PIL import ImageChops
+from PIL import ImageFilter
+from PIL import ImageOps
 
 from ocr_cipher_solver.data_formats import BoundingBox
 from ocr_cipher_solver.data_formats import RGBA
@@ -95,6 +98,73 @@ def _get_original_color(
     return max(matching_colors, key=lambda x: x[0])[1]
 
 
+def _invert_mask(mask: Image.Image) -> Image.Image:
+    """Inverts mask.
+
+    Parameters
+    ----------
+    mask : Image.Image
+        mask to invert
+
+    Returns
+    -------
+    Image.Image
+        inverted image mask
+    """
+    return ImageOps.invert(mask.convert('L')).convert('1')
+
+
+def _get_text_mask(img: Image.Image, kernel_size_fac: float, pixel_thresh: int) -> Image.Image:
+    """Gets text mask using high-pass filter.
+
+    Parameters
+    ----------
+    img : Image.Image
+        image to get text mask for
+    kernel_size_fac : float
+        factor of the size of the smallest dimension of the image to use for Gaussian kernel
+    pixel_thresh : int
+        pixel lut threshold to include in text mask (lower -> more sensitive)
+
+    Returns
+    -------
+    Image.Image
+        text mask constructed from image
+    """
+    # find kernel size (factor of the size of the smallest dimension of the image)
+    kernel_size = int(kernel_size_fac * min(img.width, img.height))
+
+    # get difference between image and smoothed image
+    raw_diff = ImageChops.difference(
+        img, img.filter(ImageFilter.GaussianBlur(radius=kernel_size)),
+    )
+
+    # threshold, convert to binary, and return image
+    return raw_diff.convert('L').point(lambda p: p > pixel_thresh and 256, mode='1')
+
+
+def _mask_image(img: Image.Image, mask: Image.Image) -> Image.Image:
+    """Masks image with provided mask.
+
+    Parameters
+    ----------
+    img : Image.Image
+        image to mask
+    mask : Image.Image
+        mask to mask image with
+
+    Returns
+    -------
+    Image.Image
+        masked image
+    """
+    return Image.composite(
+        img.convert('RGB'),
+        Image.new('RGB', (img.width, img.height), (0, 0, 0, 255)),
+        mask,
+    ).convert('RGBA')
+
+
 def get_fg_bg_colors_from_img_section(
     img: Image.Image, bounding_box: BoundingBox, downsample_fac: int = 64,
 ) -> Tuple[RGBA, RGBA]:
@@ -114,20 +184,31 @@ def get_fg_bg_colors_from_img_section(
     Tuple[RGBA, RGBA]
         tuple of RGBA values for text color, background color
     """
-    # get colors from image
+    # crop image to character
     left, top, right, bottom = bounding_box.to_ltrb()
-    colors: List[Tuple[int, RGBA]] = img.crop(
+    cropped_img: Image.Image = img.crop(
         (left, img.height - top, right, img.height - bottom),
-    ).convert('RGBA').getcolors()   # type: ignore
+    ).convert('RGBA')
+
+    # get foreground and background masked images
+    text_mask: Image.Image = _get_text_mask(cropped_img, kernel_size_fac=0.05, pixel_thresh=64)
+    fg_img: Image.Image = _mask_image(cropped_img, text_mask)
+    bg_img: Image.Image = _mask_image(cropped_img, _invert_mask(text_mask))
+
+    # get colors for foreground, background masked images
+    fg_colors: List[Tuple[int, RGBA]] = fg_img.getcolors()  # type: ignore
+    bg_colors: List[Tuple[int, RGBA]] = bg_img.getcolors()  # type: ignore
 
     # downsample pixel values and get histogram
-    downsampled_colors = _downsample_colors(colors, downsample_fac)
+    downsampled_fg_colors = _downsample_colors(fg_colors, downsample_fac)
+    downsampled_bg_colors = _downsample_colors(bg_colors, downsample_fac)
 
-    # pick 1st and 2nd most common colors as fg, bg colors respectively
-    fg, bg = [*downsampled_colors.keys()][:2]
+    # pick the most common colors for fg, bg
+    fg: RGBA = next(iter(downsampled_fg_colors))
+    bg: RGBA = next(iter(downsampled_bg_colors))
 
     # map fg and bg back into original colors (most prevalent original color in subset)
     return (
-        _get_original_color(fg, colors, downsample_fac),
-        _get_original_color(bg, colors, downsample_fac),
+        _get_original_color(fg, fg_colors, downsample_fac),
+        _get_original_color(bg, bg_colors, downsample_fac),
     )
