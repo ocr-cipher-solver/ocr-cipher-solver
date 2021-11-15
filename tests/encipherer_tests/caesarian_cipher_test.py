@@ -33,3 +33,21 @@ def test_caesarian_cipher_enciphers_single_character_correctly(
 
     # check that output character is as expected
     assert expected_output_char == output_char
+
+
+@pytest.mark.parametrize(
+    ('input_chars', 'expected_output_chars', 'shift'),
+    ((('a', 'b'), ('b', 'c'), 1), (('b', 'a'), ('a', 'z'), -1), (('f', 'a'), ('k', 'f'), 5)),
+)
+def test_caesarian_cipher_enciphers_multiple_characters_correctly(
+    input_chars, expected_output_chars, shift,
+):
+    """Tests that caesarian cipher computes correct output characters given inputs and a shift."""
+    # create caesarian cipher object (arrange step)
+    cipher = CaesarianCipher(shift)
+
+    # run cipher on the input character (act step)
+    output_chars = charset_to_chars(cipher.run(chars_to_charset(input_chars)))
+
+    # check that output character is as expected
+    assert list(expected_output_chars) == output_chars
