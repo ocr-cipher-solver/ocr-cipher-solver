@@ -142,7 +142,7 @@ def _get_text_mask(img: Image.Image, kernel_size_fac: float, pixel_thresh: int) 
 
     # threshold, convert to binary, and return image
 #    return raw_diff.convert('L').point(lambda p: p > pixel_thresh and 256, mode='1')
-    return Image.new("1", (img.width, img.height), color=1)
+    return Image.new('1', (img.width, img.height), color=1)
 
 
 def _get_colors(img: Image.Image, mask: Image.Image) -> List[Tuple[int, RGBA]]:
@@ -173,6 +173,7 @@ def _get_colors(img: Image.Image, mask: Image.Image) -> List[Tuple[int, RGBA]]:
         (freq, color)
         for color, freq in colors.items()
     ]
+
 
 def get_fg_bg_colors_from_img_section(
     img: Image.Image, bounding_box: BoundingBox, downsample_fac: int = 96,
