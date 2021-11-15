@@ -4,6 +4,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
+import numpy as np
 from PIL import Image
 from PIL import ImageChops
 from PIL import ImageFilter
@@ -132,7 +133,7 @@ def _get_text_mask(img: Image.Image, kernel_size_fac: float, pixel_thresh: int) 
         text mask constructed from image
     """
     # find kernel size (factor of the size of the smallest dimension of the image)
-    kernel_size = int(kernel_size_fac * min(img.width, img.height))
+    kernel_size = max(int(kernel_size_fac * min(img.width, img.height)), 1)
 
     # get difference between image and smoothed image
     raw_diff = ImageChops.difference(
@@ -140,33 +141,41 @@ def _get_text_mask(img: Image.Image, kernel_size_fac: float, pixel_thresh: int) 
     )
 
     # threshold, convert to binary, and return image
-    return raw_diff.convert('L').point(lambda p: p > pixel_thresh and 256, mode='1')
+#    return raw_diff.convert('L').point(lambda p: p > pixel_thresh and 256, mode='1')
+    return Image.new("1", (img.width, img.height), color=1)
 
 
-def _mask_image(img: Image.Image, mask: Image.Image) -> Image.Image:
-    """Masks image with provided mask.
+def _get_colors(img: Image.Image, mask: Image.Image) -> List[Tuple[int, RGBA]]:
+    """Gets colors from masked image.
 
     Parameters
     ----------
     img : Image.Image
-        image to mask
+        image to get colors from
     mask : Image.Image
-        mask to mask image with
+        mask to apply to image when getting colors
 
     Returns
     -------
-    Image.Image
-        masked image
+    List[Tuple[int, RGBA]]
+        list of colors in masked image
     """
-    return Image.composite(
-        img.convert('RGB'),
-        Image.new('RGB', (img.width, img.height), (0, 0, 0, 255)),
-        mask,
-    ).convert('RGBA')
+    # init colors dict
+    colors: DefaultDict[RGBA, int] = collections.defaultdict(int)
 
+    # iterate over pixels in image and tally colors
+    for img_row, mask_row in zip(np.asarray(img), np.asarray(mask)):
+        for img_pixel, mask_pixel in zip(img_row, mask_row):
+            colors[tuple(img_pixel)] += int(mask_pixel)
+
+    # convert colors dict to list of tuples and return
+    return [
+        (freq, color)
+        for color, freq in colors.items()
+    ]
 
 def get_fg_bg_colors_from_img_section(
-    img: Image.Image, bounding_box: BoundingBox, downsample_fac: int = 64,
+    img: Image.Image, bounding_box: BoundingBox, downsample_fac: int = 96,
 ) -> Tuple[RGBA, RGBA]:
     """Gets foreground (text) and background colors from image section.
 
@@ -191,24 +200,20 @@ def get_fg_bg_colors_from_img_section(
     ).convert('RGBA')
 
     # get foreground and background masked images
-    text_mask: Image.Image = _get_text_mask(cropped_img, kernel_size_fac=0.05, pixel_thresh=64)
-    fg_img: Image.Image = _mask_image(cropped_img, text_mask)
-    bg_img: Image.Image = _mask_image(cropped_img, _invert_mask(text_mask))
+    text_mask: Image.Image = _get_text_mask(cropped_img, kernel_size_fac=0.05, pixel_thresh=32)
 
     # get colors for foreground, background masked images
-    fg_colors: List[Tuple[int, RGBA]] = fg_img.getcolors()  # type: ignore
-    bg_colors: List[Tuple[int, RGBA]] = bg_img.getcolors()  # type: ignore
+    colors: List[Tuple[int, RGBA]] = _get_colors(cropped_img, text_mask)
 
     # downsample pixel values and get histogram
-    downsampled_fg_colors = _downsample_colors(fg_colors, downsample_fac)
-    downsampled_bg_colors = _downsample_colors(bg_colors, downsample_fac)
+    downsampled_colors = _downsample_colors(colors, downsample_fac)
 
     # pick the most common colors for fg, bg
-    fg: RGBA = next(iter(downsampled_fg_colors))
-    bg: RGBA = next(iter(downsampled_bg_colors))
+    print(downsampled_colors)
+    bg, fg, *_ = downsampled_colors.keys()
 
     # map fg and bg back into original colors (most prevalent original color in subset)
     return (
-        _get_original_color(fg, fg_colors, downsample_fac),
-        _get_original_color(bg, bg_colors, downsample_fac),
+        _get_original_color(fg, colors, downsample_fac),
+        _get_original_color(bg, colors, downsample_fac),
     )
