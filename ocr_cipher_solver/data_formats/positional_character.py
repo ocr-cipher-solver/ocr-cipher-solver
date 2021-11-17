@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import List
+from typing import Tuple
 
 from .bounding_box import BoundingBox
 from .character import Character
@@ -21,7 +22,7 @@ class PositionalCharacter:
 
     @classmethod
     def from_tesseract_char(
-        cls, char: Character, left: int, bottom: int, right: int, top: int,
+        cls, char: Character, left: int, bottom: int, right: int, top: int, image_shape: tuple[int, int],
     ) -> PositionalCharacter:
         """Creates positional character from tesseract character.
 
@@ -37,6 +38,8 @@ class PositionalCharacter:
             distance from right of bounding box to right edge of image
         top : int
             distance from top of bounding box to top edge of image
+        image_shape : Tuple[int, int]
+            shape of image
 
         Returns
         -------
@@ -45,7 +48,7 @@ class PositionalCharacter:
         """
         return cls(
             character=char,
-            bounding_box=BoundingBox.from_lbrt(left, bottom, right, top),
+            bounding_box=BoundingBox.from_lbrt(left, bottom, right, top, *image_shape),
         )
 
 

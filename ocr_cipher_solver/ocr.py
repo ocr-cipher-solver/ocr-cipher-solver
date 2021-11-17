@@ -26,4 +26,4 @@ class OCR:
             np.asarray(input_image), output_type=pytesseract.Output.DICT,
         )
 
-        return utils.convert_to_pos_char_set(recognized_characters)
+        return utils.convert_to_pos_char_set(recognized_characters, input_image.size)
