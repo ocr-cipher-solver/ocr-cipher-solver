@@ -35,11 +35,11 @@ class Reconstructor:
         ReconstructedImage
             image created from overlaying ciphered characters on input image
         """
-        reconstructed_img: Image.Image = input_image.copy()
-        drawable_img: ImageDraw.ImageDraw = ImageDraw.Draw(reconstructed_img)
+        reconstructed_img: Image.Image = input_image.copy().convert(mode='RGB')
+        drawable_img: ImageDraw.ImageDraw = ImageDraw.Draw(reconstructed_img, 'RGBA')
         for char in ciphered_char_set:
+            self._draw_rect(char.bounding_box, drawable_img)
             self._draw_char(char, drawable_img, reconstructed_img.info)
-#            self._draw_rect(char.bounding_box, drawable_img)
 
         return reconstructed_img
 
@@ -61,7 +61,7 @@ class Reconstructor:
         text_color, fill_color = (255, 255, 255, 255), (0, 0, 0, 255)
 
         # get font for character
-        font = get_font_from_bounding_box(char.bounding_box, img_info.get('dpi', 72))
+        font = get_font_from_bounding_box(char.bounding_box.width)
 
         # draw character on image and return
         drawable_img.text(
@@ -83,7 +83,7 @@ class Reconstructor:
         drawable_img : ImageDraw.ImageDraw
             image to draw rect onto
         """
-        fill_color = (0, 0, 0, 255)
+        fill_color = (255, 255, 255, 255)
 
         drawable_img.rectangle(
             bbox.to_ltrb(coords=Coords.TopLeft),
