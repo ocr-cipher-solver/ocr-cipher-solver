@@ -61,9 +61,6 @@ class ImagePipeline:
             enciphered_positional_char_set, input_image,
         )
 
-        # TODO REMOVE
-        reconstructed_image.show()
-
         # run output heads
         for output in self._outputs:
-            output.run(reconstructed_image)
+            output.run(reconstructed_image, enciphered_positional_char_set)

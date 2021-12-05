@@ -39,6 +39,8 @@ class Reconstructor:
         drawable_img: ImageDraw.ImageDraw = ImageDraw.Draw(reconstructed_img, 'RGBA')
         for char in ciphered_char_set:
             self._draw_rect(char.bounding_box, drawable_img)
+
+        for char in ciphered_char_set:
             self._draw_char(char, drawable_img, reconstructed_img.info)
 
         return reconstructed_img
@@ -61,11 +63,19 @@ class Reconstructor:
         text_color, fill_color = (255, 255, 255, 255), (0, 0, 0, 255)
 
         # get font for character
-        font = get_font_from_bounding_box(char.bounding_box.width)
+        font = get_font_from_bounding_box(char.bounding_box.width, char.character)
+
+        # get font offset for character
+        offset = font.getoffset(char.character)
+
+        # apply offset to bounding box
+        bbox = char.bounding_box.to_ltrb(coords=Coords.TopLeft)[:2]
+        offset_x = bbox[0] - offset[0]
+        offset_y = bbox[1] - offset[1]
 
         # draw character on image and return
         drawable_img.text(
-            char.bounding_box.to_ltrb(coords=Coords.TopLeft)[:2],
+            (offset_x, offset_y),
             char.character,
             font=font,
             fill=fill_color,
