@@ -18,7 +18,8 @@ if __name__ == '__main__':
 
     parser.add_argument('img_path', type=pathlib.Path)
     parser.add_argument('--shift', type=int, default=0)
-    parser.add_argument("--save_path", type=pathlib.Path)
+    parser.add_argument('--save_path', type=pathlib.Path)
+    parser.add_argument("--show", action="store_true")
 
     args = parser.parse_args()
 
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         OCR(),
         CaesarianCipher(shift=args.shift),
         Reconstructor(),
-        (SaveImage(args.save_path), ShowImage()),
+        (SaveImage(args.save_path), ShowImage()) if args.show else (SaveImage(args.save_path),)
     )
 
     # run pipeline

@@ -8,6 +8,7 @@ from ocr_cipher_solver.outputs.base import PipelineOutput
 
 class SaveImage(PipelineOutput):
     """Saves image."""
+
     def __init__(self, save_path: pathlib.Path):
         self._save_path = save_path
 
