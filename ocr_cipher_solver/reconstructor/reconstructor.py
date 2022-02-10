@@ -1,6 +1,15 @@
+from typing import Dict
+from typing import Tuple
+
 from PIL import Image
+from PIL import ImageDraw
 
 from ocr_cipher_solver.data_formats import PositionalCharacterSet
+from ocr_cipher_solver.data_formats.bounding_box import BoundingBox
+from ocr_cipher_solver.data_formats.bounding_box import Coords
+from ocr_cipher_solver.data_formats.positional_character import PositionalCharacter
+from ocr_cipher_solver.utils.color_utils import get_fg_bg_colors_from_img_section
+from ocr_cipher_solver.utils.font_utils import get_font_from_bounding_box
 
 
 ReconstructedImage = Image.Image
@@ -26,4 +35,67 @@ class Reconstructor:
         ReconstructedImage
             image created from overlaying ciphered characters on input image
         """
-        ...
+        reconstructed_img: Image.Image = input_image.copy().convert(mode='RGB')
+        drawable_img: ImageDraw.ImageDraw = ImageDraw.Draw(reconstructed_img, 'RGBA')
+        for char in ciphered_char_set:
+            self._draw_rect(char.bounding_box, drawable_img)
+
+        for char in ciphered_char_set:
+            self._draw_char(char, drawable_img, reconstructed_img.info)
+
+        return reconstructed_img
+
+    @staticmethod
+    def _draw_char(char: PositionalCharacter, drawable_img: ImageDraw.ImageDraw, img_info: Dict):
+        """Draws character and returns resultant image.
+
+        Parameters
+        ----------
+        char : PositionalCharacter
+            positional character to draw on image
+        drawable_img : ImageDraw.ImageDraw
+            image to draw on
+        img_info : Dict
+            img information dict
+        """
+        # get colors for text, background
+        # text_color, fill_color = get_fg_bg_colors_from_img_section(img, char.bounding_box)
+        text_color, fill_color = (255, 255, 255, 255), (0, 0, 0, 255)
+
+        # get font for character
+        font = get_font_from_bounding_box(char.bounding_box.width, char.character)
+
+        # get font offset for character
+        offset = font.getoffset(char.character)
+
+        # apply offset to bounding box
+        bbox = char.bounding_box.to_ltrb(coords=Coords.TopLeft)[:2]
+        offset_x = bbox[0] - offset[0]
+        offset_y = bbox[1] - offset[1]
+
+        # draw character on image and return
+        drawable_img.text(
+            (offset_x, offset_y),
+            char.character,
+            font=font,
+            fill=fill_color,
+            stroke_fill=text_color,
+        )
+
+    @staticmethod
+    def _draw_rect(bbox: BoundingBox, drawable_img: ImageDraw.ImageDraw):
+        """Draws rectangle on image in bounding box.
+
+        Parameters
+        ----------
+        bbox : BoundingBox
+            bounding box to draw rect in
+        drawable_img : ImageDraw.ImageDraw
+            image to draw rect onto
+        """
+        fill_color = (255, 255, 255, 255)
+
+        drawable_img.rectangle(
+            bbox.to_ltrb(coords=Coords.TopLeft),
+            fill=fill_color,
+        )
